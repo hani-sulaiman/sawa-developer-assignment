@@ -1,5 +1,45 @@
 # MedBook - Implementation Notes
 
+## Libraries & Tools Used
+
+| Library | Purpose | Why I chose it |
+| --- | --- | --- |
+| React + TypeScript | UI framework and type-safe components | Strong typing, reusable components, and fast iteration for complex UI.
+| Vite | Frontend build tool | Fast dev server and modern build pipeline.
+| Mantine UI | Component library | Accessible, polished components with good theming support.
+| Tailwind CSS | Utility-first styling | Rapid layout iteration and consistent design tokens.
+| TanStack React Query | Server state management | Cache, refetch, and optimistic updates for API-driven UI.
+| React Hook Form + Zod | Forms + validation | Lightweight form state and shared schema validation.
+| Express + TypeScript | Backend API | Simple HTTP server with strong typing.
+| Socket.IO | Real-time features | Reliable bi-directional events for chat and notifications.
+| sql.js (SQLite) | Database | Portable, lightweight DB without native dependencies.
+| Multer | File uploads | Simple multipart handling for medical records.
+
+## Architecture Decisions
+
+- **Service-repository backend structure** to keep data access separate from business rules.
+- **Shared Zod schemas** across frontend and backend for consistent validation and types.
+- **React Query for server state** to avoid duplicated fetch logic and keep UI in sync.
+- **Socket.IO for real-time** to support chat and notifications without polling.
+- **Component-driven UI** with Mantine + Tailwind to balance speed and design control.
+
+## Challenges Faced
+
+- Keeping real-time notification updates consistent across dropdown and list views.
+- Syncing favorites state without requiring manual refresh.
+- Ensuring uploaded medical records resolve correctly via static file serving.
+
+## Time Spent
+
+| Part | Time |
+| --- | --- |
+| Backend API | 3H |
+| Service List Page | 2H |
+| Service Detail Page | 1H |
+| Booking Form | 2H |
+| Styling | 4H |
+| Total | 12H |
+
 ## Architecture Overview
 
 ### Tech Stack
