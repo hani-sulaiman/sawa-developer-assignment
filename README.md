@@ -115,6 +115,24 @@
 
 ---
 
+## Environment Variables
+
+Create a `.env` file in the project root (you can copy from `.env.example`).
+
+| Variable | Required | Description |
+|:--|:--|:--|
+| `PORT` | Optional | Backend port (default `3001`) |
+| `JWT_SECRET` | **Yes** | Secret used to sign/verify JWTs |
+
+Example:
+
+```
+PORT=3001
+JWT_SECRET=replace-with-a-strong-secret
+```
+
+---
+
 ## Requirements
 
 ### Part 1: Authentication

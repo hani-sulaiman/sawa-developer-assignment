@@ -1,0 +1,244 @@
+import type { Prescription } from '@shared/schemas';
+
+const formatDate = (dateStr?: string | null) => {
+  if (!dateStr) return 'N/A';
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+};
+
+const escapeHtml = (value?: string | null) =>
+  (value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
+export const openPrescriptionPdf = (prescription: Prescription) => {
+  const medicationsHtml = prescription.medications
+    .map(
+      (med) => `
+        <tr>
+          <td>${escapeHtml(med.name)}</td>
+          <td>${escapeHtml(med.dosage)}</td>
+          <td>${escapeHtml(med.frequency)}</td>
+          <td>${escapeHtml(med.duration || '')}</td>
+          <td>${escapeHtml(med.notes || '')}</td>
+        </tr>
+      `
+    )
+    .join('');
+
+  const html = `
+    <!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="utf-8" />
+        <title>Prescription</title>
+        <style>
+          @page { margin: 24mm; }
+          body {
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            color: #111827;
+            margin: 0;
+          }
+          .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 12px;
+            margin-bottom: 24px;
+          }
+          .title {
+            font-size: 28px;
+            font-weight: 700;
+          }
+          .subtitle {
+            color: #6b7280;
+            font-size: 14px;
+          }
+          .grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+          }
+          .panel {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 14px 16px;
+          }
+          .panel h4 {
+            margin: 0 0 6px;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #6b7280;
+          }
+          .panel p {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 600;
+            color: #111827;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+            font-size: 13px;
+          }
+          th, td {
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 8px 6px;
+            vertical-align: top;
+          }
+          th {
+            color: #6b7280;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.06em;
+          }
+          .section-title {
+            margin: 18px 0 8px;
+            font-size: 15px;
+            font-weight: 700;
+          }
+          .notes {
+            background: #eff6ff;
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #1e3a8a;
+          }
+          .footer {
+            margin-top: 32px;
+            font-size: 12px;
+            color: #9ca3af;
+            text-align: center;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div>
+            <div class="title">Prescription</div>
+            <div class="subtitle">Issued on ${formatDate(prescription.createdAt)}</div>
+          </div>
+          <div class="subtitle">ID: ${escapeHtml(prescription.id)}</div>
+        </div>
+
+        <div class="grid">
+          <div class="panel">
+            <h4>Doctor</h4>
+            <p>${escapeHtml(prescription.doctorName)}</p>
+          </div>
+          <div class="panel">
+            <h4>Patient</h4>
+            <p>${escapeHtml(prescription.patientName)}</p>
+          </div>
+          <div class="panel">
+            <h4>Diagnosis</h4>
+            <p>${escapeHtml(prescription.diagnosis || 'Not specified')}</p>
+          </div>
+          <div class="panel">
+            <h4>Valid Until</h4>
+            <p>${escapeHtml(prescription.validUntil ? formatDate(prescription.validUntil) : 'Open')}</p>
+          </div>
+        </div>
+
+        <div class="section-title">Medications</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Dosage</th>
+              <th>Frequency</th>
+              <th>Duration</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${medicationsHtml}
+          </tbody>
+        </table>
+
+        ${prescription.instructions ? `
+          <div class="section-title">Instructions</div>
+          <div class="notes">${escapeHtml(prescription.instructions)}</div>
+        ` : ''}
+
+        <div class="footer">Generated by MedBook</div>
+      </body>
+    </html>
+  `;
+
+  if (!document?.body) return false;
+
+  const iframe = document.createElement('iframe');
+  iframe.style.position = 'fixed';
+  iframe.style.right = '0';
+  iframe.style.bottom = '0';
+  iframe.style.width = '0';
+  iframe.style.height = '0';
+  iframe.style.border = '0';
+  iframe.style.visibility = 'hidden';
+  iframe.title = 'Prescription PDF';
+  iframe.srcdoc = html;
+
+  const cleanup = () => {
+    setTimeout(() => {
+      if (iframe.parentNode) {
+        iframe.parentNode.removeChild(iframe);
+      }
+    }, 500);
+  };
+
+  let printTriggered = false;
+
+  const triggerPrint = () => {
+    if (printTriggered) return;
+    printTriggered = true;
+    const frameWindow = iframe.contentWindow;
+    if (!frameWindow) {
+      cleanup();
+      return;
+    }
+    frameWindow.focus();
+    frameWindow.print();
+    frameWindow.onafterprint = cleanup;
+    setTimeout(cleanup, 1500);
+  };
+
+  document.body.appendChild(iframe);
+
+  const frameDocument = iframe.contentDocument || iframe.contentWindow?.document;
+  if (!frameDocument) {
+    cleanup();
+    return false;
+  }
+
+  frameDocument.open();
+  frameDocument.write(html);
+  frameDocument.close();
+
+  const schedulePrint = () => {
+    setTimeout(triggerPrint, 250);
+  };
+
+  if (frameDocument.readyState === 'complete') {
+    schedulePrint();
+  } else {
+    iframe.onload = schedulePrint;
+  }
+
+  setTimeout(triggerPrint, 1200);
+  return true;
+};

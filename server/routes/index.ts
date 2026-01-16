@@ -1,0 +1,13 @@
+export { default as authRoutes } from './auth/auth.routes';
+export { default as doctorRoutes } from './doctors/doctor.routes';
+export { default as doctorPatientsRoutes } from './doctors/patients.routes';
+export { default as appointmentRoutes } from './appointments/appointment.routes';
+export { default as favoritesRoutes } from './patients/favorites.routes';
+export { default as patientRoutes } from './patients/patient.routes';
+export { default as prescriptionsRoutes } from './patients/prescriptions.routes';
+export { default as schedulesRoutes } from './doctors/schedules.routes';
+export { default as patientNotesRoutes } from './doctors/patient-notes.routes';
+export { default as medicalRecordsRoutes } from './patients/medical-records.routes';
+export { default as notificationsRoutes } from './shared/notifications.routes';
+export { default as chatRoutes } from './shared/chat.routes';
+export { default as analyticsRoutes } from './doctors/analytics.routes';
